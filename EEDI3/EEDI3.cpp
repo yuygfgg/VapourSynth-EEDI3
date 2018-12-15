@@ -159,7 +159,7 @@ inline void calculateConnectionCosts(const float * src3p, const float * src1p, c
     }
 }
 
-template<typename T1, typename T2 = void>
+template<typename T1>
 static void filter_c(const VSFrameRef * src, const VSFrameRef * scp, const VSFrameRef * mclip, VSFrameRef * mcp, VSFrameRef * dst, VSFrameRef ** pad,
                      const int field_n, const EEDI3Data * const VS_RESTRICT d, const VSAPI * vsapi) noexcept {
     for (int plane = 0; plane < d->vi.format->numPlanes; plane++) {
@@ -210,22 +210,22 @@ static void filter_c(const VSFrameRef * src, const VSFrameRef * scp, const VSFra
 
                 if (bmask) {
                     const uint8_t * maskp = _maskp + vsapi->getStride(mcp, plane) * off;
-                    const int mdis = std::min(dstWidth, d->mdis);
+                    const int minmdis = std::min(dstWidth, d->mdis);
                     int last = -666999;
 
-                    for (int x = 0; x < mdis; x++) {
+                    for (int x = 0; x < minmdis; x++) {
                         if (maskp[x])
-                            last = x + mdis;
+                            last = x + d->mdis;
                     }
 
-                    for (int x = 0; x < dstWidth - mdis; x++) {
-                        if (maskp[x + mdis])
-                            last = x + mdis * 2;
+                    for (int x = 0; x < dstWidth - minmdis; x++) {
+                        if (maskp[x + d->mdis])
+                            last = x + d->mdis * 2;
 
                         bmask[x] = (x <= last);
                     }
 
-                    for (int x = dstWidth - mdis; x < dstWidth; x++)
+                    for (int x = dstWidth - minmdis; x < dstWidth; x++)
                         bmask[x] = (x <= last);
 
                     memset(ccosts - d->mdis, 0, dstWidth * d->tpitch * sizeof(float));
@@ -391,7 +391,7 @@ static const VSFrameRef *VS_CC eedi3GetFrame(int n, int activationReason, void *
                     d->srcVector.emplace(threadId, srcVector);
 
                     if (d->mclip) {
-                        uint8_t * mskVector = vs_aligned_malloc<uint8_t>(d->vi.width * d->vectorSize * sizeof(uint8_t), d->alignment);
+                        uint8_t * mskVector = new (std::nothrow) uint8_t[d->vi.width * d->vectorSize];
                         if (!mskVector)
                             throw std::string{ "malloc failure (mskVector)" };
                         d->mskVector.emplace(threadId, mskVector);
@@ -537,7 +537,7 @@ static void VS_CC eedi3Free(void *instanceData, VSCore *core, const VSAPI *vsapi
         vs_aligned_free(iter.second);
 
     for (auto & iter : d->mskVector)
-        vs_aligned_free(iter.second);
+        delete[] iter.second;
 
     for (auto & iter : d->bmask)
         delete[] iter.second;

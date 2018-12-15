@@ -6,15 +6,6 @@
 #define MAX_VECTOR_SIZE 512
 #include "vectorclass/vectorclass.h"
 
-static void copyMask(const VSFrameRef * src, VSFrameRef * dst, const int plane, const int field_n, const bool dh, const VSAPI * vsapi) noexcept {
-    const int off = dh ? 0 : field_n;
-    const int mul = dh ? 1 : 2;
-
-    vs_bitblt(vsapi->getWritePtr(dst, plane), vsapi->getStride(dst, plane),
-              vsapi->getReadPtr(src, plane) + vsapi->getStride(src, plane) * off, vsapi->getStride(src, plane) * mul,
-              vsapi->getFrameWidth(src, plane), vsapi->getFrameHeight(dst, plane));
-}
-
 template<typename T1, typename T2>
 static inline void prepareLines(const T1 * srcp, T2 * _dstp, const int width, const int height, const int srcStride, const int dstStride, const int srcY, const int vectorSize) noexcept {
     for (int y = srcY - 2; y < srcY + 2; y++) {
@@ -64,6 +55,15 @@ static inline void prepareMask(const uint8_t * srcp, uint8_t * VS_RESTRICT dstp,
     }
 }
 #endif
+
+static void copyMask(const VSFrameRef * src, VSFrameRef * dst, const int plane, const int field_n, const bool dh, const VSAPI * vsapi) noexcept {
+    const int off = dh ? 0 : field_n;
+    const int mul = dh ? 1 : 2;
+
+    vs_bitblt(vsapi->getWritePtr(dst, plane), vsapi->getStride(dst, plane),
+              vsapi->getReadPtr(src, plane) + vsapi->getStride(src, plane) * off, vsapi->getStride(src, plane) * mul,
+              vsapi->getFrameWidth(src, plane), vsapi->getFrameHeight(dst, plane));
+}
 
 struct EEDI3Data {
     VSNodeRef * node, * sclip, * mclip;

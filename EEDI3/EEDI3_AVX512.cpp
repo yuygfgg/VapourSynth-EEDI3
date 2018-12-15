@@ -6,7 +6,7 @@
 #include "EEDI3.hpp"
 
 template<typename T>
-static inline void calculateConnectionCosts(const void * srcp, const bool * bmask, float * ccosts, const int width, const int stride, const EEDI3Data * const VS_RESTRICT d) noexcept {
+static inline void calculateConnectionCosts(const T * srcp, const bool * bmask, float * ccosts, const int width, const int stride, const EEDI3Data * const VS_RESTRICT d) noexcept {
     const __m512i * src3p = reinterpret_cast<const __m512i *>(srcp) + 12;
     const __m512i * src1p = src3p + stride;
     const __m512i * src1n = src1p + stride;
@@ -74,7 +74,7 @@ static inline void calculateConnectionCosts(const void * srcp, const bool * bmas
 }
 
 template<>
-inline void calculateConnectionCosts<float>(const void * srcp, const bool * bmask, float * ccosts, const int width, const int stride, const EEDI3Data * const VS_RESTRICT d) noexcept {
+inline void calculateConnectionCosts(const float * srcp, const bool * bmask, float * ccosts, const int width, const int stride, const EEDI3Data * const VS_RESTRICT d) noexcept {
     const __m512 * src3p = reinterpret_cast<const __m512 *>(srcp) + 12;
     const __m512 * src1p = src3p + stride;
     const __m512 * src1n = src1p + stride;
@@ -190,28 +190,28 @@ void filter_avx512(const VSFrameRef * src, const VSFrameRef * scp, const VSFrame
                     prepareMask(maskp, _mskVector, dstWidth, (dstHeight + field_n) >> 1, vsapi->getStride(mcp, plane), off, d->vectorSize);
 
                     const int64_t * mskVector = reinterpret_cast<const int64_t *>(_mskVector);
-                    const int mdis = std::min(dstWidth, d->mdis);
+                    const int minmdis = std::min(dstWidth, d->mdis);
                     int last = -666999;
 
-                    for (int x = 0; x < mdis; x++) {
+                    for (int x = 0; x < minmdis; x++) {
                         if (mskVector[x * 2] || mskVector[x * 2 + 1])
-                            last = x + mdis;
+                            last = x + d->mdis;
                     }
 
-                    for (int x = 0; x < dstWidth - mdis; x++) {
-                        if (mskVector[(x + mdis) * 2] || mskVector[(x + mdis) * 2 + 1])
-                            last = x + mdis * 2;
+                    for (int x = 0; x < dstWidth - minmdis; x++) {
+                        if (mskVector[(x + d->mdis) * 2] || mskVector[(x + d->mdis) * 2 + 1])
+                            last = x + d->mdis * 2;
 
                         bmask[x] = (x <= last);
                     }
 
-                    for (int x = dstWidth - mdis; x < dstWidth; x++)
+                    for (int x = dstWidth - minmdis; x < dstWidth; x++)
                         bmask[x] = (x <= last);
 
                     memset(ccosts - d->mdisVector, 0, dstWidth * d->tpitchVector * sizeof(float));
                 }
 
-                calculateConnectionCosts<T1>(srcVector, bmask, ccosts, dstWidth, srcWidth, d);
+                calculateConnectionCosts<T2>(srcVector, bmask, ccosts, dstWidth, srcWidth, d);
 
                 // calculate path costs
                 Vec16f().load_a(ccosts).store_a(pcosts);
