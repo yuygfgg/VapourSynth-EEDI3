@@ -1,1 +1,5 @@
-option('opencl', type : 'boolean', value : true, description : 'Enable EEDI3CL filter')
+option('opencl',
+  type : 'boolean',
+  value : true,
+  description : 'Enable EEDI3CL filter'
+)

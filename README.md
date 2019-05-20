@@ -9,7 +9,7 @@ Ported from AviSynth plugin http://bengal.missouri.edu/~kes25c/ and http://ldeso
 Usage
 =====
 
-    eedi3m.EEDI3(clip clip, int field[, bint dh=False, int[] planes, float alpha=0.2, float beta=0.25, float gamma=20.0, int nrad=2, int mdis=20, bint hp=False, bint ucubic=True, bint cost3=True, int vcheck=2, float vthresh0=32.0, float vthresh1=64.0, float vthresh2=4.0, clip sclip=None, clip mclip=None, int opt=0])
+    eedi3m.EEDI3(clip clip, int field[, bint dh=False, int[] planes=[0, 1, 2], float alpha=0.2, float beta=0.25, float gamma=20.0, int nrad=2, int mdis=20, bint hp=False, bint ucubic=True, bint cost3=True, int vcheck=2, float vthresh0=32.0, float vthresh1=64.0, float vthresh2=4.0, clip sclip=None, clip mclip=None, int opt=0])
 
 * clip: Clip to process. Any planar format with either integer sample type of 8-16 bit depth or float sample type of 32 bit depth is supported.
 
@@ -21,7 +21,7 @@ Usage
 
 * dh: Doubles the height of the input. Each line of the input is copied to every other line of the output and the missing lines are interpolated. If `field=0`, the input is copied to the odd lines of the output. If `field=1`, the input is copied to the even lines of the output. `field` must be set to either 0 or 1 when using `dh=True`.
 
-* planes: A list of the planes to process. By default all planes are processed.
+* planes: Sets which planes will be processed. Planes that are not processed will contain uninitialized memory.
 
 * alpha/beta/gamma: These trade off line/edge connection vs artifacts created. `alpha` and `beta` must be in the range [0,1], and the sum `alpha`+`beta` must be in the range [0,1]. `alpha` is the weight given to connecting similar neighborhoods. The larger `alpha` is the more lines/edges should be connected. `beta` is the weight given to vertical difference created by the interpolation. The larger `beta` is the less edges/lines will be connected (at 1.0 you get no edge directedness at all). The remaining weight (1.0-`alpha`-`beta`) is given to interpolation direction (large directions (away from vertical) cost more). So the more weight you have here the more shorter connections will be favored. Finally, `gamma` penalizes changes in interpolation direction, the larger `gamma` is the smoother the interpolation field between two lines (range is [0,inf]. If lines aren't getting connected then increase `alpha` and maybe decrease `beta`/`gamma`. Go the other way if you are getting unwanted artifacts.
 
@@ -89,7 +89,7 @@ Usage
 
 ---
 
-    eedi3m.EEDI3CL(clip clip, int field[, bint dh=False, int[] planes, float alpha=0.2, float beta=0.25, float gamma=20.0, int nrad=2, int mdis=20, bint hp=False, bint ucubic=True, bint cost3=True, int vcheck=2, float vthresh0=32.0, float vthresh1=64.0, float vthresh2=4.0, clip sclip=None, int opt=0, int device=-1, bint list_device=False, bint info=False])
+    eedi3m.EEDI3CL(clip clip, int field[, bint dh=False, int[] planes=[0, 1, 2], float alpha=0.2, float beta=0.25, float gamma=20.0, int nrad=2, int mdis=20, bint hp=False, bint ucubic=True, bint cost3=True, int vcheck=2, float vthresh0=32.0, float vthresh1=64.0, float vthresh2=4.0, clip sclip=None, int opt=0, int device=-1, bint list_device=False, bint info=False])
 
 * device: Sets target OpenCL device. Use `list_device` to get the index of the available devices. By default the default device is selected.
 
