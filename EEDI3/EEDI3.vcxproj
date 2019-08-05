@@ -8,7 +8,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <UseNativeEnvironment>true</UseNativeEnvironment>
-    <VCProjectVersion>15.0</VCProjectVersion>
+    <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{8989D573-D34F-4EBF-A2B4-1BD90D301FFA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>EEDI3</RootNamespace>
@@ -33,8 +33,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>$(ProjectName)m</TargetName>
-    <IncludePath>C:\Program Files %28x86%29\VapourSynth\sdk\include\vapoursynth;C:\boost_1_70_0;$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\boost_1_70_0\lib64-msvc-14.1;$(CUDA_PATH)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files\VapourSynth\sdk\include\vapoursynth;C:\boost_1_71_0;$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\boost_1_71_0\lib64-msvc-14.2;$(CUDA_PATH)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -48,7 +48,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>libboost_filesystem-vc141-mt-x64-1_70.lib;libboost_system-vc141-mt-x64-1_70.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libboost_filesystem-vc142-mt-x64-1_71.lib;libboost_system-vc142-mt-x64-1_71.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -93,9 +93,9 @@ Usage
 
 * device: Sets target OpenCL device. Use `list_device` to get the index of the available devices. By default the default device is selected.
 
-* list_device: Whether to draw the devices list on the frame.
+* list_device: Whether to print the device list on the frame.
 
-* info: Whether to draw the OpenCL-related info on the frame.
+* info: Whether to print the OpenCL-related info on the frame.
 
 * opt: Sets which cpu optimizations to use.
   * 0 = auto detect
@@ -111,4 +111,5 @@ Requires `Boost` unless specify `-Dopencl=false`.
 ```
 meson build
 ninja -C build
+ninja -C build install
 ```

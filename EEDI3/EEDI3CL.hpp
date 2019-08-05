@@ -20,8 +20,8 @@ struct EEDI3CLData {
     float gamma, vthresh2;
     int peak, vectorSize, tpitch, mdisVector, tpitchVector;
     float rcpVthresh0, rcpVthresh1, rcpVthresh2;
-    compute::device gpu;
-    compute::context ctx;
+    compute::device device;
+    compute::context context;
     compute::program program;
     cl_image_format clImageFormat;
     std::unordered_map<std::thread::id, compute::command_queue> queue;

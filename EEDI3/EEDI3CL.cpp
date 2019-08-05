@@ -26,6 +26,7 @@
 
 #include <clocale>
 #include <cstdio>
+
 #include <memory>
 #include <string>
 
@@ -165,12 +166,12 @@ static void selectFunctions(const unsigned opt, EEDI3CLData * d) noexcept {
     }
 }
 
-static void VS_CC eedi3clInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
+static void VS_CC eedi3clInit(VSMap * in, VSMap * out, void ** instanceData, VSNode * node, VSCore * core, const VSAPI * vsapi) {
     EEDI3CLData * d = static_cast<EEDI3CLData *>(*instanceData);
     vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
-static const VSFrameRef *VS_CC eedi3clGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
+static const VSFrameRef * VS_CC eedi3clGetFrame(int n, int activationReason, void ** instanceData, void ** frameData, VSFrameContext * frameCtx, VSCore * core, const VSAPI * vsapi) {
     EEDI3CLData * d = static_cast<EEDI3CLData *>(*instanceData);
 
     if (activationReason == arInitial) {
@@ -185,16 +186,16 @@ static const VSFrameRef *VS_CC eedi3clGetFrame(int n, int activationReason, void
             auto threadId = std::this_thread::get_id();
 
             if (!d->queue.count(threadId)) {
-                d->queue.emplace(threadId, compute::command_queue{ d->ctx, d->gpu });
+                d->queue.emplace(threadId, compute::command_queue{ d->context, d->device });
 
                 if (d->vi.format->sampleType == stInteger)
                     d->calculateConnectionCosts.emplace(threadId, d->program.create_kernel("calculateConnectionCosts_uint"));
                 else
                     d->calculateConnectionCosts.emplace(threadId, d->program.create_kernel("calculateConnectionCosts_float"));
 
-                d->src.emplace(threadId, compute::image2d{ d->ctx, d->vi.width + 24U, d->vi.height + 8U, compute::image_format{ d->clImageFormat }, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY });
+                d->src.emplace(threadId, compute::image2d{ d->context, d->vi.width + 24U, d->vi.height + 8U, compute::image_format{ d->clImageFormat }, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY });
 
-                d->ccosts.emplace(threadId, compute::buffer{ d->ctx, d->vi.width * d->tpitchVector * sizeof(cl_float), CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR | CL_MEM_HOST_READ_ONLY });
+                d->ccosts.emplace(threadId, compute::buffer{ d->context, d->vi.width * d->tpitchVector * sizeof(cl_float), CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR | CL_MEM_HOST_READ_ONLY });
 
                 float * pcosts = vs_aligned_malloc<float>(d->vi.width * d->tpitchVector * sizeof(float), 16);
                 if (!pcosts)
@@ -307,7 +308,7 @@ static const VSFrameRef *VS_CC eedi3clGetFrame(int n, int activationReason, void
     return nullptr;
 }
 
-static void VS_CC eedi3clFree(void *instanceData, VSCore *core, const VSAPI *vsapi) {
+static void VS_CC eedi3clFree(void * instanceData, VSCore * core, const VSAPI * vsapi) {
     EEDI3CLData * d = static_cast<EEDI3CLData *>(instanceData);
 
     vsapi->freeNode(d->node);
@@ -331,7 +332,7 @@ static void VS_CC eedi3clFree(void *instanceData, VSCore *core, const VSAPI *vsa
     delete d;
 }
 
-void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
+void VS_CC eedi3clCreate(const VSMap * in, VSMap * out, void * userData, VSCore * core, const VSAPI * vsapi) {
     std::unique_ptr<EEDI3CLData> d = std::make_unique<EEDI3CLData>();
     int err;
 
@@ -340,7 +341,8 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
     d->vi = *vsapi->getVideoInfo(d->node);
 
     try {
-        if (!isConstantFormat(&d->vi) || (d->vi.format->sampleType == stInteger && d->vi.format->bitsPerSample > 16) ||
+        if (!isConstantFormat(&d->vi) ||
+            (d->vi.format->sampleType == stInteger && d->vi.format->bitsPerSample > 16) ||
             (d->vi.format->sampleType == stFloat && d->vi.format->bitsPerSample != 32))
             throw std::string{ "only constant format 8-16 bit integer and 32 bit float input supported" };
 
@@ -375,7 +377,7 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
 
         d->gamma = static_cast<float>(vsapi->propGetFloat(in, "gamma", 0, &err));
         if (err)
-            d->gamma = 20.f;
+            d->gamma = 20.0f;
 
         int nrad = int64ToIntS(vsapi->propGetInt(in, "nrad", 0, &err));
         if (err)
@@ -399,15 +401,15 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
 
         float vthresh0 = static_cast<float>(vsapi->propGetFloat(in, "vthresh0", 0, &err));
         if (err)
-            vthresh0 = 32.f;
+            vthresh0 = 32.0f;
 
         float vthresh1 = static_cast<float>(vsapi->propGetFloat(in, "vthresh1", 0, &err));
         if (err)
-            vthresh1 = 64.f;
+            vthresh1 = 64.0f;
 
         d->vthresh2 = static_cast<float>(vsapi->propGetFloat(in, "vthresh2", 0, &err));
         if (err)
-            d->vthresh2 = 4.f;
+            d->vthresh2 = 4.0f;
 
         const int opt = int64ToIntS(vsapi->propGetInt(in, "opt", 0, &err));
 
@@ -424,16 +426,16 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
         if (d->dh && d->field > 1)
             throw std::string{ "field must be 0 or 1 when dh=True" };
 
-        if (alpha < 0.f || alpha > 1.f)
+        if (alpha < 0.0f || alpha > 1.0f)
             throw std::string{ "alpha must be between 0.0 and 1.0 (inclusive)" };
 
-        if (beta < 0.f || beta > 1.f)
+        if (beta < 0.0f || beta > 1.0f)
             throw std::string{ "beta must be between 0.0 and 1.0 (inclusive)" };
 
-        if (alpha + beta > 1.f)
+        if (alpha + beta > 1.0f)
             throw std::string{ "alpha+beta must be between 0.0 and 1.0 (inclusive)" };
 
-        if (d->gamma < 0.f)
+        if (d->gamma < 0.0f)
             throw std::string{ "gamma must be greater than or equal to 0.0" };
 
         if (nrad < 0 || nrad > 3)
@@ -445,7 +447,7 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
         if (d->vcheck < 0 || d->vcheck > 3)
             throw std::string{ "vcheck must be 0, 1, 2, or 3" };
 
-        if (d->vcheck && (vthresh0 <= 0.f || vthresh1 <= 0.f || d->vthresh2 <= 0.f))
+        if (d->vcheck && (vthresh0 <= 0.0f || vthresh1 <= 0.0f || d->vthresh2 <= 0.0f))
             throw std::string{ "vthresh0, vthresh1, and vthresh2 must be greater than 0.0" };
 
         if (opt < 0 || opt > 2)
@@ -484,10 +486,10 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
             return;
         }
 
-        d->gpu = compute::system::default_device();
+        d->device = compute::system::default_device();
         if (device > -1)
-            d->gpu = compute::system::devices().at(device);
-        d->ctx = compute::context{ d->gpu };
+            d->device = compute::system::devices().at(device);
+        d->context = compute::context{ d->device };
 
         if (!!vsapi->propGetInt(in, "info", 0, &err)) {
             vsapi->freeNode(d->sclip);
@@ -542,10 +544,10 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
         if (d->dh)
             d->vi.height *= 2;
 
-        const float remainingWeight = 1.f - alpha - beta;
+        const float remainingWeight = 1.0f - alpha - beta;
 
         if (cost3)
-            alpha /= 3.f;
+            alpha /= 3.0f;
 
         if (d->vcheck && d->sclip) {
             if (!isSameFormat(vsapi->getVideoInfo(d->sclip), &d->vi))
@@ -570,25 +572,25 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
 
         if (d->vi.format->sampleType == stInteger) {
             d->peak = (1 << d->vi.format->bitsPerSample) - 1;
-            const float scale = d->peak / 255.f;
+            const float scale = d->peak / 255.0f;
             beta *= scale;
             d->gamma *= scale;
             vthresh0 *= scale;
             vthresh1 *= scale;
         } else {
-            beta /= 255.f;
-            d->gamma /= 255.f;
-            vthresh0 /= 255.f;
-            vthresh1 /= 255.f;
+            beta /= 255.0f;
+            d->gamma /= 255.0f;
+            vthresh0 /= 255.0f;
+            vthresh1 /= 255.0f;
         }
 
         d->tpitch = d->mdis * 2 + 1;
         d->tpitchVector = d->tpitch * d->vectorSize;
         d->mdisVector = d->mdis * d->vectorSize;
 
-        d->rcpVthresh0 = 1.f / vthresh0;
-        d->rcpVthresh1 = 1.f / vthresh1;
-        d->rcpVthresh2 = 1.f / d->vthresh2;
+        d->rcpVthresh0 = 1.0f / vthresh0;
+        d->rcpVthresh1 = 1.0f / vthresh1;
+        d->rcpVthresh2 = 1.0f / d->vthresh2;
 
         if (d->vi.format->bytesPerSample == 1)
             d->clImageFormat = { CL_R, CL_UNSIGNED_INT8 };
@@ -617,7 +619,7 @@ void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *co
             options += " -D LOCAL_WORK_SIZE_X=" + std::to_string(64 / d->vectorSize);
             options += " -D LOCAL_WORK_SIZE_Y=" + std::to_string(d->vectorSize);
             std::setlocale(LC_ALL, "");
-            d->program = compute::program::build_with_source(source, d->ctx, options);
+            d->program = compute::program::build_with_source(source, d->context, options);
         } catch (const compute::opencl_error & error) {
             throw error.error_string() + "\n" + d->program.build_log();
         }

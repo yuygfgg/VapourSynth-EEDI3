@@ -106,7 +106,7 @@ inline void calculateConnectionCosts(const float * src3p, const float * src1p, c
                 const int umax = std::min({ x, width - 1 - x, d->mdis });
                 for (int u = -umax; u <= umax; u++) {
                     const int u2 = u * 2;
-                    float s0 = 0.f, s1 = -FLT_MAX, s2 = -FLT_MAX;
+                    float s0 = 0.0f, s1 = -FLT_MAX, s2 = -FLT_MAX;
 
                     for (int k = -(d->nrad); k <= d->nrad; k++)
                         s0 += std::abs(src3p[x + u + k] - src1p[x - u + k]) +
@@ -114,7 +114,7 @@ inline void calculateConnectionCosts(const float * src3p, const float * src1p, c
                               std::abs(src1n[x + u + k] - src3n[x - u + k]);
 
                     if ((u >= 0 && x >= u2) || (u <= 0 && x < width + u2)) {
-                        s1 = 0.f;
+                        s1 = 0.0f;
                         for (int k = -(d->nrad); k <= d->nrad; k++)
                             s1 += std::abs(src3p[x + k] - src1p[x - u2 + k]) +
                                   std::abs(src1p[x + k] - src1n[x - u2 + k]) +
@@ -122,7 +122,7 @@ inline void calculateConnectionCosts(const float * src3p, const float * src1p, c
                     }
 
                     if ((u <= 0 && x >= -u2) || (u >= 0 && x < width - u2)) {
-                        s2 = 0.f;
+                        s2 = 0.0f;
                         for (int k = -(d->nrad); k <= d->nrad; k++)
                             s2 += std::abs(src3p[x + u2 + k] - src1p[x + k]) +
                                   std::abs(src1p[x + u2 + k] - src1n[x + k]) +
@@ -132,7 +132,7 @@ inline void calculateConnectionCosts(const float * src3p, const float * src1p, c
                     s1 = (s1 > -FLT_MAX) ? s1 : (s2 > -FLT_MAX ? s2 : s0);
                     s2 = (s2 > -FLT_MAX) ? s2 : (s1 > -FLT_MAX ? s1 : s0);
 
-                    const float ip = (src1p[x + u] + src1n[x - u]) / 2.f; // should use cubic if ucubic=true
+                    const float ip = (src1p[x + u] + src1n[x - u]) / 2.0f; // should use cubic if ucubic=true
                     const float v = std::abs(src1p[x] - ip) + std::abs(src1n[x] - ip);
                     ccosts[d->tpitch * x + u] = d->alpha * (s0 + s1 + s2) + d->beta * std::abs(u) + d->remainingWeight * v;
                 }
@@ -143,14 +143,14 @@ inline void calculateConnectionCosts(const float * src3p, const float * src1p, c
             if (!bmask || bmask[x]) {
                 const int umax = std::min({ x, width - 1 - x, d->mdis });
                 for (int u = -umax; u <= umax; u++) {
-                    float s = 0.f;
+                    float s = 0.0f;
 
                     for (int k = -(d->nrad); k <= d->nrad; k++)
                         s += std::abs(src3p[x + u + k] - src1p[x - u + k]) +
                              std::abs(src1p[x + u + k] - src1n[x - u + k]) +
                              std::abs(src1n[x + u + k] - src3n[x - u + k]);
 
-                    const float ip = (src1p[x + u] + src1n[x - u]) / 2.f; // should use cubic if ucubic=true
+                    const float ip = (src1p[x + u] + src1n[x - u]) / 2.0f; // should use cubic if ucubic=true
                     const float v = std::abs(src1p[x] - ip) + std::abs(src1n[x] - ip);
                     ccosts[d->tpitch * x + u] = d->alpha * s + d->beta * std::abs(u) + d->remainingWeight * v;
                 }
@@ -359,12 +359,12 @@ static void selectFunctions(const unsigned opt, EEDI3Data * d) noexcept {
     }
 }
 
-static void VS_CC eedi3Init(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
+static void VS_CC eedi3Init(VSMap * in, VSMap * out, void ** instanceData, VSNode * node, VSCore * core, const VSAPI * vsapi) {
     EEDI3Data * d = static_cast<EEDI3Data *>(*instanceData);
     vsapi->setVideoInfo(&d->vi, 1, node);
 }
 
-static const VSFrameRef *VS_CC eedi3GetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
+static const VSFrameRef * VS_CC eedi3GetFrame(int n, int activationReason, void ** instanceData, void ** frameData, VSFrameContext * frameCtx, VSCore * core, const VSAPI * vsapi) {
     EEDI3Data * d = static_cast<EEDI3Data *>(*instanceData);
 
     if (activationReason == arInitial) {
@@ -524,7 +524,7 @@ static const VSFrameRef *VS_CC eedi3GetFrame(int n, int activationReason, void *
     return nullptr;
 }
 
-static void VS_CC eedi3Free(void *instanceData, VSCore *core, const VSAPI *vsapi) {
+static void VS_CC eedi3Free(void * instanceData, VSCore * core, const VSAPI * vsapi) {
     EEDI3Data * d = static_cast<EEDI3Data *>(instanceData);
 
     vsapi->freeNode(d->node);
@@ -561,7 +561,7 @@ static void VS_CC eedi3Free(void *instanceData, VSCore *core, const VSAPI *vsapi
     delete d;
 }
 
-void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
+void VS_CC eedi3Create(const VSMap * in, VSMap * out, void * userData, VSCore * core, const VSAPI * vsapi) {
     std::unique_ptr<EEDI3Data> d = std::make_unique<EEDI3Data>();
     int err;
 
@@ -571,7 +571,8 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
     d->vi = *vsapi->getVideoInfo(d->node);
 
     try {
-        if (!isConstantFormat(&d->vi) || (d->vi.format->sampleType == stInteger && d->vi.format->bitsPerSample > 16) ||
+        if (!isConstantFormat(&d->vi) ||
+            (d->vi.format->sampleType == stInteger && d->vi.format->bitsPerSample > 16) ||
             (d->vi.format->sampleType == stFloat && d->vi.format->bitsPerSample != 32))
             throw std::string{ "only constant format 8-16 bit integer and 32 bit float input supported" };
 
@@ -606,7 +607,7 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
 
         d->gamma = static_cast<float>(vsapi->propGetFloat(in, "gamma", 0, &err));
         if (err)
-            d->gamma = 20.f;
+            d->gamma = 20.0f;
 
         d->nrad = int64ToIntS(vsapi->propGetInt(in, "nrad", 0, &err));
         if (err)
@@ -630,15 +631,15 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
 
         float vthresh0 = static_cast<float>(vsapi->propGetFloat(in, "vthresh0", 0, &err));
         if (err)
-            vthresh0 = 32.f;
+            vthresh0 = 32.0f;
 
         float vthresh1 = static_cast<float>(vsapi->propGetFloat(in, "vthresh1", 0, &err));
         if (err)
-            vthresh1 = 64.f;
+            vthresh1 = 64.0f;
 
         d->vthresh2 = static_cast<float>(vsapi->propGetFloat(in, "vthresh2", 0, &err));
         if (err)
-            d->vthresh2 = 4.f;
+            d->vthresh2 = 4.0f;
 
         const int opt = int64ToIntS(vsapi->propGetInt(in, "opt", 0, &err));
 
@@ -651,16 +652,16 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
         if (d->dh && d->field > 1)
             throw std::string{ "field must be 0 or 1 when dh=True" };
 
-        if (d->alpha < 0.f || d->alpha > 1.f)
+        if (d->alpha < 0.0f || d->alpha > 1.0f)
             throw std::string{ "alpha must be between 0.0 and 1.0 (inclusive)" };
 
-        if (d->beta < 0.f || d->beta > 1.f)
+        if (d->beta < 0.0f || d->beta > 1.0f)
             throw std::string{ "beta must be between 0.0 and 1.0 (inclusive)" };
 
-        if (d->alpha + d->beta > 1.f)
+        if (d->alpha + d->beta > 1.0f)
             throw std::string{ "alpha+beta must be between 0.0 and 1.0 (inclusive)" };
 
-        if (d->gamma < 0.f)
+        if (d->gamma < 0.0f)
             throw std::string{ "gamma must be greater than or equal to 0.0" };
 
         if (d->nrad < 0 || d->nrad > 3)
@@ -672,7 +673,7 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
         if (d->vcheck < 0 || d->vcheck > 3)
             throw std::string{ "vcheck must be 0, 1, 2, or 3" };
 
-        if (d->vcheck && (vthresh0 <= 0.f || vthresh1 <= 0.f || d->vthresh2 <= 0.f))
+        if (d->vcheck && (vthresh0 <= 0.0f || vthresh1 <= 0.0f || d->vthresh2 <= 0.0f))
             throw std::string{ "vthresh0, vthresh1, and vthresh2 must be greater than 0.0" };
 
         if (d->mclip) {
@@ -718,10 +719,10 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
         if (d->dh)
             d->vi.height *= 2;
 
-        d->remainingWeight = 1.f - d->alpha - d->beta;
+        d->remainingWeight = 1.0f - d->alpha - d->beta;
 
         if (d->cost3)
-            d->alpha /= 3.f;
+            d->alpha /= 3.0f;
 
         if (d->vcheck && d->sclip) {
             if (!isSameFormat(vsapi->getVideoInfo(d->sclip), &d->vi))
@@ -746,25 +747,25 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
 
         if (d->vi.format->sampleType == stInteger) {
             d->peak = (1 << d->vi.format->bitsPerSample) - 1;
-            const float scale = d->peak / 255.f;
+            const float scale = d->peak / 255.0f;
             d->beta *= scale;
             d->gamma *= scale;
             vthresh0 *= scale;
             vthresh1 *= scale;
         } else {
-            d->beta /= 255.f;
-            d->gamma /= 255.f;
-            vthresh0 /= 255.f;
-            vthresh1 /= 255.f;
+            d->beta /= 255.0f;
+            d->gamma /= 255.0f;
+            vthresh0 /= 255.0f;
+            vthresh1 /= 255.0f;
         }
 
         d->tpitch = d->mdis * 2 + 1;
         d->tpitchVector = d->tpitch * d->vectorSize;
         d->mdisVector = d->mdis * d->vectorSize;
 
-        d->rcpVthresh0 = 1.f / vthresh0;
-        d->rcpVthresh1 = 1.f / vthresh1;
-        d->rcpVthresh2 = 1.f / d->vthresh2;
+        d->rcpVthresh0 = 1.0f / vthresh0;
+        d->rcpVthresh1 = 1.0f / vthresh1;
+        d->rcpVthresh2 = 1.0f / d->vthresh2;
     } catch (const std::string & error) {
         vsapi->setError(out, ("EEDI3: " + error).c_str());
         vsapi->freeNode(d->node);
@@ -780,10 +781,10 @@ void VS_CC eedi3Create(const VSMap *in, VSMap *out, void *userData, VSCore *core
 // Init
 
 #ifdef HAVE_OPENCL
-extern void VS_CC eedi3clCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi);
+extern void VS_CC eedi3clCreate(const VSMap * in, VSMap * out, void * userData, VSCore * core, const VSAPI * vsapi);
 #endif
 
-VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
+VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin * plugin) {
     configFunc("com.holywu.eedi3", "eedi3m", "Enhanced Edge Directed Interpolation 3", VAPOURSYNTH_API_VERSION, 1, plugin);
 
     registerFunc("EEDI3",
