@@ -24,10 +24,9 @@
 **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <clocale>
-#include <cstdio>
-
+#include <locale>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include "EEDI3CL.hpp"
@@ -622,26 +621,24 @@ void VS_CC eedi3clCreate(const VSMap * in, VSMap * out, void * userData, VSCore 
             d->clImageFormat = { CL_R, CL_FLOAT };
 
         try {
-            std::setlocale(LC_ALL, "C");
-            char buf[100];
-            std::string options{ "-cl-denorms-are-zero -cl-fast-relaxed-math -Werror" };
-            std::snprintf(buf, 100, "%.20ff", alpha);
-            options += " -D ALPHA=" + std::string{ buf };
-            std::snprintf(buf, 100, "%.20ff", beta);
-            options += " -D BETA=" + std::string{ buf };
-            options += " -D NRAD=" + std::to_string(nrad);
-            options += " -D MDIS=" + std::to_string(d->mdis);
-            options += " -D COST3=" + std::to_string(cost3);
-            std::snprintf(buf, 100, "%.20ff", remainingWeight);
-            options += " -D REMAINING_WEIGHT=" + std::string{ buf };
-            options += " -D TPITCH=" + std::to_string(d->tpitch);
-            options += " -D VECTOR_SIZE=" + std::to_string(d->vectorSize);
-            options += " -D MDIS_VECTOR=" + std::to_string(d->mdisVector);
-            options += " -D TPITCH_VECTOR=" + std::to_string(d->tpitchVector);
-            options += " -D LOCAL_WORK_SIZE_X=" + std::to_string(64 / d->vectorSize);
-            options += " -D LOCAL_WORK_SIZE_Y=" + std::to_string(d->vectorSize);
-            std::setlocale(LC_ALL, "");
-            d->program = compute::program::build_with_source(source, d->context, options);
+            std::ostringstream options;
+            options.imbue(std::locale{ "C" });
+            options.precision(16);
+            options.setf(std::ios::fixed, std::ios::floatfield);
+            options << "-cl-denorms-are-zero -cl-fast-relaxed-math -Werror";
+            options << " -D ALPHA=" << alpha << "f";
+            options << " -D BETA=" << beta << "f";
+            options << " -D NRAD=" << nrad;
+            options << " -D MDIS=" << d->mdis;
+            options << " -D COST3=" << cost3;
+            options << " -D REMAINING_WEIGHT=" << remainingWeight << "f";
+            options << " -D TPITCH=" << d->tpitch;
+            options << " -D VECTOR_SIZE=" << d->vectorSize;
+            options << " -D MDIS_VECTOR=" << d->mdisVector;
+            options << " -D TPITCH_VECTOR=" << d->tpitchVector;
+            options << " -D LOCAL_WORK_SIZE_X=" << (64 / d->vectorSize);
+            options << " -D LOCAL_WORK_SIZE_Y=" << d->vectorSize;
+            d->program = compute::program::build_with_source(source, d->context, options.str());
         } catch (const compute::opencl_error & error) {
             throw error.error_string() + "\n" + d->program.build_log();
         }
