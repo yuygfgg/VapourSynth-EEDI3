@@ -4,12 +4,25 @@ project('EEDI3', 'cpp',
   version : '5'
 )
 
-add_project_arguments('-Wno-unused-variable', '-ffast-math', language : 'cpp')
+opencl_dep = dependency('OpenCL', required : false)
+if not opencl_dep.found()
+  opencl_dep = meson.get_compiler('cpp').find_library('OpenCL')
+endif
+
+boost_dep = dependency('boost', modules : ['filesystem', 'system'])
+
+add_project_arguments('-Wno-unused-variable', '-ffast-math', '-std=c++17', language : 'cpp')
+add_project_arguments('-DHAVE_OPENCL', language : 'cpp')
+
+
 
 sources = [
   'EEDI3/EEDI3.cpp',
   'EEDI3/EEDI3.hpp',
   'EEDI3/shared.hpp',
+  'EEDI3/EEDI3CL.cpp',
+  'EEDI3/EEDI3CL.hpp',
+  'EEDI3/EEDI3CL_SSE2.cpp',
   'EEDI3/vectorclass/instrset.h',
   'EEDI3/vectorclass/instrset_detect.cpp'
 ]
@@ -17,7 +30,7 @@ sources = [
 vapoursynth_dep = dependency('vapoursynth').partial_dependency(compile_args : true, includes : true)
 
 deps = [vapoursynth_dep]
-
+deps += [opencl_dep, boost_dep]
 libs = []
 
 if host_machine.cpu_family().startswith('x86')

@@ -41,6 +41,40 @@
 *
 * (c) Copyright 2012-2017 GNU General Public License http://www.gnu.org/licenses
 *****************************************************************************/
+
+/*
+ARM compatible include of the vectorclass
+
+on ARM/MAC the sse2neon lib will be imported
+and some parameters for the vectorclass are prepared.
+
+#IMPORTANT in vectorclass.h->instrset.h the cpuid function must be
+hidden, since it is not compatible with ARM-compilers.
+
+if missing, add the header-include check #if !defined(SSE2NEON_H)
+to the function to hide it when compiling on ARM
+
+remember that a dispatcher is not possible in this case.
+
+*/
+
+#if __arm64
+#include "sse2neon.h"
+
+// limit to 128byte, since we want to use ARM-neon
+#define MAX_VECTOR_SIZE 128
+
+//limit to sse4.2, sse2neon does not have any AVX instructions ( so far )
+#define INSTRSET 6
+
+//define unknown function
+#define _mm_getcsr() 1
+
+//simulate header included
+#define __X86INTRIN_H
+#endif
+// finally include vectorclass
+
 #ifndef VECTORI128_H
 #define VECTORI128_H
 
